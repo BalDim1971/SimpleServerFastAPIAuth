@@ -1,3 +1,6 @@
+from typing import Dict, Any
+
+import jwt
 from sqlalchemy import (
     LargeBinary,
     Column,
@@ -8,8 +11,9 @@ from sqlalchemy import (
     PrimaryKeyConstraint
 )
 from sqlalchemy.ext.declarative import declarative_base
+import bcrypt
 
-# from src.database import Base
+from src.config import JWT_SECRET_KEY
 
 Base = declarative_base()
 
@@ -29,3 +33,28 @@ class User(Base):
     def __repr__(self):
         """Returns string representation of model instance"""
         return "<User {full_name!r}>".format(full_name=self.full_name)
+
+    @staticmethod
+    def hash_password(password) -> bytes:
+        """Transforms password from it's raw textual form to
+        cryptographic hashes
+        """
+        return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+
+    def validate_password(self, password) -> dict[str, Any]:
+        """Confirms password validity"""
+        return {
+            "access_token": jwt.encode(
+                {"full_name": self.full_name, "email": self.email},
+                "ApplicationSecretKey"
+            )
+        }
+
+    def generate_token(self) -> dict:
+        """Generate access token for user"""
+        return {
+            "access_token": jwt.encode(
+                {"full_name": self.full_name, "email": self.email},
+                JWT_SECRET_KEY
+            )
+        }

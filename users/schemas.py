@@ -1,8 +1,8 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 
 
 class UserBaseSchema(BaseModel):
-    email: EmailStr
+    username: str
     full_name: str
 
 
