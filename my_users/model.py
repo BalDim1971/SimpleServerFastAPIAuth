@@ -20,24 +20,25 @@ Base = declarative_base()
 
 class User(Base):
     """Models a user table"""
-    __tablename__ = "users"
+    __tablename__ = "my_users"
     id = Column(Integer, nullable=False, primary_key=True)
     username = Column(String(225), nullable=False, unique=True)
     hashed_password = Column(LargeBinary, nullable=False)
     full_name = Column(String(225), nullable=False)
     is_active = Column(Boolean, default=False)
 
-    UniqueConstraint("email", name="uq_user_email")
+    UniqueConstraint("username", name="uq_user_name")
     PrimaryKeyConstraint("id", name="pk_user_id")
 
     def __repr__(self):
-        """Returns string representation of model instance"""
+        """Возвращает строковое представление экземпляра модели"""
         return "<User {full_name!r}>".format(full_name=self.full_name)
 
     @staticmethod
     def hash_password(password) -> bytes:
-        """Transforms password from it's raw textual form to
-        cryptographic hashes
+        """
+        Преобразует пароль из его необработанной текстовой формы в
+        криптографические хэши
         """
         return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
@@ -45,7 +46,7 @@ class User(Base):
         """Confirms password validity"""
         return {
             "access_token": jwt.encode(
-                {"full_name": self.full_name, "email": self.email},
+                {"full_name": self.full_name, "username": self.username},
                 "ApplicationSecretKey"
             )
         }
@@ -54,7 +55,7 @@ class User(Base):
         """Generate access token for user"""
         return {
             "access_token": jwt.encode(
-                {"full_name": self.full_name, "email": self.email},
+                {"full_name": self.full_name, "username": self.username},
                 JWT_SECRET_KEY
             )
         }

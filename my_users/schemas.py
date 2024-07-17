@@ -16,3 +16,12 @@ class UserSchema(UserBaseSchema):
 
     class Config:
         from_attributes = True
+
+
+class UserLoginSchema(BaseModel):
+    username: str = Field(alias="username")
+    password: str
+
+
+class UserUpdateSchema(UserBaseSchema):
+    is_active: bool = Field(default=False)
