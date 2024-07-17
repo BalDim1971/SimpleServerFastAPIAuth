@@ -4,6 +4,14 @@ from src.config import DB_HOST, DB_PORT
 from src.database import engine, create_db
 from users.model import Base
 
+from fastapi import Body, Depends
+from sqlalchemy.orm import Session
+
+from src.database import get_db
+from users import model as user_model
+from users.schemas import CreateUserSchema, UserSchema
+from services.db import users as user_db_services
+
 create_db()
 
 Base.metadata.create_all(bind=engine)
@@ -11,6 +19,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Простой сервер с авторизацией",
 )
+
 
 # app.include_router(api_auth)
 # app.include_router(api_users)
@@ -28,6 +37,17 @@ async def login():
     :return: str - токен пользователя
     """
     return "ThisTokenIsFake"
+
+
+@app.post('/signup', response_model=UserSchema)
+def signup(
+        payload: CreateUserSchema = Body(),
+        session: Session = Depends(get_db)
+):
+    """Processes request to register user account."""
+    payload.hashed_password = user_model.User.hash_password(
+        payload.hashed_password)
+    return user_db_services.create_user(session, user=payload)
 
 
 if __name__ == '__main__':
