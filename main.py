@@ -1,3 +1,9 @@
+"""
+Основная запускающая программа простого сервера с авторизацией и
+аутентификацией.
+Для работы нужен uvicorn.
+"""
+
 from typing import Dict, List
 
 from fastapi import FastAPI, HTTPException, status
@@ -11,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from src.database import get_db
 from my_users import model as user_model
-from my_users.schemas import CreateUserSchema, UserSchema, UserLoginSchema, UserUpdateSchema
+from my_users.schemas import CreateUserSchema, UserSchema, UserUpdateSchema
 from services.db import users as user_db_services
 
 create_db()
@@ -34,9 +40,8 @@ def login(
     Обрабатывает аутентификацию пользователя и возвращает токен
     при успешной аутентификации.
     Тело запроса:
-    - имя пользователя: уникальный идентификатор пользователя, например:
-     адрес электронной почты, имя
-    - пароль:
+    - имя пользователя: уникальный идентификатор пользователя;
+    - пароль;
     :return: str - токен пользователя
     """
     try:
@@ -65,7 +70,12 @@ def signup(
     session: Session = Depends(get_db)
 ):
     """
-    Обрабатывает запрос на регистрацию учетной записи пользователя.
+    Обрабатывает запрос на регистрацию учетной записи пользователя
+    Тело запроса:
+    - имя пользователя: уникальный идентификатор пользователя;
+    - полное имя пользователя;
+    - пароль;
+    :return: данные пользователя.
     """
     payload.hashed_password = user_model.User.hash_password(
         payload.hashed_password)
@@ -79,8 +89,10 @@ def profile(
     session: Session = Depends(get_db)
 ):
     """
-    Обрабатывает запрос на извлечение пользовательского
-    профиля по идентификатору
+    Обрабатывает запрос на извлечение данных пользователя по идентификатору
+    Тело запроса:
+    - id - идентификатор пользователя;
+    :return: данные по пользователю.
     """
     try:
         user: user_model.User = user_db_services.get_user_by_id(
@@ -97,7 +109,8 @@ def profile(
 @app.get("/users", response_model=List[UserSchema])
 def get_users(session: Session = Depends(get_db)):
     """
-    Запрос на получение списка всех пользователей.
+    Запрос на получение списка всех пользователей;
+    :return: данные по всем пользователям.
     """
     return user_db_services.get_users(session=session)
 
@@ -110,6 +123,10 @@ def update_profile(
 ):
     """
     Обрабатываем запрос на обновление данных по пользователю.
+    Тело запроса:
+    - id - идентификатор пользователя;
+    - данные для обновления;
+    :return: обновленные данные по пользователю.
     """
     try:
         user: user_model.User = user_db_services.get_user_by_id(
@@ -120,8 +137,29 @@ def update_profile(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Пользователя с id = {id} нет."
         )
-    return user_db_services.update_profile(session=session,
+    return user_db_services.update_user(session=session,
                                            id=id, user=payload)
+
+
+@app.delete("/profile/{id}")
+def delete_profile(id: int, session: Session = Depends(get_db)):
+    """
+    Обрабатывает запрос на удаление пользователя по идентификатору
+    Тело запроса:
+    - id - идентификатор пользователя;
+    :return: данные по пользователю.
+    """
+    try:
+        user: user_model.User = user_db_services.get_user_by_id(
+            session=session, id=id
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Пользователя с id = {id} нет."
+        )
+    return user_db_services.delete_user(session=session, id=id)
+
 
 
 if __name__ == '__main__':

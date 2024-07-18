@@ -1,3 +1,7 @@
+"""
+Описание схем для работы с данными о пользователях.
+"""
+
 from pydantic import BaseModel, Field
 
 

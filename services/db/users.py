@@ -1,4 +1,12 @@
-from typing import List
+"""
+Сервисные функции по работе с базой данных для пользователей.
+1. create_user - Создание пользователя.
+2. get_user - Получение данных о пользователе по имени.
+3. get_user_by_id - Получение данных о пользователе по id.
+4. get_users - Получение данных о всех пользователях.
+5. update_user - Обновление данных пользователя по id.
+6. delete_user - Удаление пользователя по id.
+"""
 
 from sqlalchemy.orm import Session
 
@@ -26,11 +34,18 @@ def get_users(session: Session):
     return session.query(User).order_by(User.id)
 
 
-def update_profile(session: Session, id: int, user: UserUpdateSchema):
+def update_user(session: Session, id: int, user: UserUpdateSchema):
     db_user = session.query(User).filter(User.id == id).first()
     db_user.full_name = user.full_name
     db_user.is_active = user.is_active
     db_user.username = user.username
     session.commit()
     session.refresh(db_user)
+    return db_user
+
+
+def delete_user(session: Session, id: int):
+    db_user = session.query(User).filter(User.id == id).first()
+    session.delete(db_user)
+    session.commit()
     return db_user
